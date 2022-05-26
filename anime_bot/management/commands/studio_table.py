@@ -3,6 +3,7 @@ import requests
 from django.core.management.base import BaseCommand
 from anime_bot.models import Studio
 
+
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
@@ -14,11 +15,3 @@ class Command(BaseCommand):
                 studio, _ = Studio.objects.update_or_create(id_s=field['mal_id'],
                                                             title=field['name'],
                                                             )
-
-
-
-
-
-
-
-

@@ -1,7 +1,10 @@
-from django.urls import path, include
-from anime_bot import views
-
-urlpatterns = [
-    path('api/animebase/', views.animebase, name='animebase'),
-    # path('api/animebase/<int:pk>', views.animebase, name='api_anime_base'),
-]
+# from django.urls import path
+# from rest_framework.urlpatterns import format_suffix_patterns
+# from anime_bot import views
+#
+# urlpatterns = [
+#     path('subscribers/', views.SubscriberList.as_view()),
+#     path('subscribers/<int:pk>', views.SubscriberDetail.as_view()),
+# ]
+#
+# urlpatterns = format_suffix_patterns(urlpatterns)
