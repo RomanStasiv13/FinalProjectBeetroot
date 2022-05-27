@@ -15,8 +15,8 @@ class Start(BaseState):
     def process_call_back(self, message: types.CallbackQuery) -> 'BaseState':
         if message.data:
             if message.data == 'nextstate:ShowMenu':
-                return ShowMenu(self.bot, self.chat_id)
-        return Start(self.bot, self.chat_id)
+                return ShowMenu(self.bot, self.chat_id, self.msg_to_del)
+        return Start(self.bot, self.chat_id, self.msg_to_del)
 
     def get_keyboard(self):
         markup = types.InlineKeyboardMarkup(row_width=1, )
@@ -33,14 +33,13 @@ class ShowMenu(BaseState):
     def process_call_back(self, message: types.CallbackQuery) -> 'BaseState':
         if message.data:
             if message.data == 'nextstate:Search':
-                return Search(self.bot, self.chat_id)
+                return Search(self.bot, self.chat_id, self.msg_to_del)
             if message.data == 'nextstate:Random':
-                return Random(self.bot, self.chat_id)
+                return Random(self.bot, self.chat_id, self.msg_to_del)
             if message.data == 'nextstate:MyLists':
-                ml = MyLists(self.bot, self.chat_id)
-                ml.set_status('///')
+                ml = MyLists(self.bot, self.chat_id, self.msg_to_del)
                 return ml
-        return ShowMenu(self.bot, self.chat_id)
+        return ShowMenu(self.bot, self.chat_id, self.msg_to_del)
 
     def get_keyboard(self):
         markup = types.InlineKeyboardMarkup(row_width=1, )
@@ -61,11 +60,13 @@ class Search(BaseState):
     def process_call_back(self, message: types.CallbackQuery) -> 'BaseState':
         if message.data:
             if message.data == 'prevstate':
-                return ShowMenu(self.bot, self.chat_id)
-            ml = SearchBy(self.bot, self.chat_id)
+                print(message.from_user.id)
+                # self.bot.delete_state(user_id=message.from_user.id, chat_id=self.chat_id)
+                return ShowMenu(self.bot, self.chat_id, self.msg_to_del)
+            ml = SearchBy(self.bot, self.chat_id, self.msg_to_del)
             ml.status = message.data
             return ml
-        return Search(self.bot, self.chat_id)
+        return Search(self.bot, self.chat_id, self.msg_to_del)
 
     def get_keyboard(self):
         markup = types.InlineKeyboardMarkup(row_width=1)
@@ -78,6 +79,7 @@ class Search(BaseState):
         back_button = types.InlineKeyboardButton('Back ↩',
                                                  callback_data='prevstate')
         markup.add(search_by_name, search_by_genre, search_by_studio, back_button)
+        print(markup)
         return markup
 
 
@@ -87,19 +89,18 @@ class Random(BaseState):
 
     def process_call_back(self, message: types.CallbackQuery) -> 'BaseState':
         if message.data:
-
             if message.data[:9] == 'nextstate':
-                add_to_list = AddToList(self.bot, self.chat_id)
+                add_to_list = AddToList(self.bot, self.chat_id, self.msg_to_del)
                 add_to_list.anime_id = str(message.data[9:])
                 return add_to_list
             if message.data == 'prevstate':
-                return ShowMenu(self.bot, self.chat_id)
+                return ShowMenu(self.bot, self.chat_id, self.msg_to_del)
             if message.data == 'repeat':
-                return Random(self.bot, self.chat_id)
-            a_d = AnimeDetails(self.bot, self.chat_id)
+                return Random(self.bot, self.chat_id, self.msg_to_del)
+            a_d = AnimeDetails(self.bot, self.chat_id, self.msg_to_del)
             a_d.anime_id = message.data
             return a_d
-        return Random(self.bot, self.chat_id)
+        return Random(self.bot, self.chat_id, self.msg_to_del)
 
     def get_keyboard(self):
         r = requests.get('http://127.0.0.1:8000/api/animebase/?format=json&limit=1')
@@ -115,7 +116,7 @@ class Random(BaseState):
         detail_button = types.InlineKeyboardButton('Detail 👁‍🗨', callback_data=anime['results'][0]['id_a'])
         next_rand_button = types.InlineKeyboardButton('Next ➡', callback_data='repeat')
         back_button = types.InlineKeyboardButton('Back ↩', callback_data='prevstate')
-        markup.add(add_button, detail_button, back_button,next_rand_button)
+        markup.add(add_button, detail_button, back_button, next_rand_button)
         return markup
 
 
@@ -125,9 +126,9 @@ class MyLists(BaseState):
 
     def process_call_back(self, message: types.CallbackQuery) -> 'BaseState':
         if message.data == 'prevstate':
-            return ShowMenu(self.bot, self.chat_id)
+            return ShowMenu(self.bot, self.chat_id, self.msg_to_del)
 
-        ml = Lists(self.bot, self.chat_id)
+        ml = Lists(self.bot, self.chat_id, self.msg_to_del)
         ml.status = message.data
         return ml
 
@@ -154,9 +155,11 @@ class SearchBy(BaseState):
     status = '-'
 
     def display(self):
+        sent = []
         if self.text == "-":
             self.text = f"<b>Please enter the parameter!</b>"
-            self.bot.send_message(self.chat_id, self.text, parse_mode='html')
+            sent.append(self.bot.send_message(self.chat_id, self.text, parse_mode='html'))
+        return sent
 
     def process_text_message(self, message: types.Message) -> 'BaseState':
         if message.text:
@@ -167,6 +170,7 @@ class SearchBy(BaseState):
                     self.send_anime(anime['results'][i])
                     self.bot.send_message(self.chat_id, '<b>Would you like to add this title?</b>',
                                           reply_markup=self.add_to_list(anime['results'][i]['id_a']), parse_mode='html')
+
                 return self
             else:
                 self.bot.send_sticker(self.chat_id,
@@ -175,7 +179,7 @@ class SearchBy(BaseState):
                                       "<b>There is no such anime</b>",
                                       reply_markup=self.get_keyboard(),
                                       parse_mode='html')
-                return Search(self.bot, self.chat_id)
+            return Search(self.bot, self.chat_id, self.msg_to_del)
 
     def add_to_list(self, id_a):
         markup = types.InlineKeyboardMarkup(row_width=2, )
@@ -187,12 +191,12 @@ class SearchBy(BaseState):
     def process_call_back(self, message: types.CallbackQuery) -> 'BaseState':
         if message.data:
             if message.data[:9] == 'nextstate':
-                add_to_list = AddToList(self.bot, self.chat_id)
+                add_to_list = AddToList(self.bot, self.chat_id, self.msg_to_del)
                 add_to_list.anime_id = str(message.data[9:])
                 return add_to_list
             if message.data == 'prevstate':
-                return ShowMenu(self.bot, self.chat_id)
-            a_d = AnimeDetails(self.bot, self.chat_id)
+                return ShowMenu(self.bot, self.chat_id, self.msg_to_del)
+            a_d = AnimeDetails(self.bot, self.chat_id, self.msg_to_del)
             a_d.anime_id = message.data
             return a_d
 
@@ -205,31 +209,82 @@ class SearchBy(BaseState):
 
 
 class Lists(BaseState):  # Подивитися списки
-    text = "<b>Here is your list!</b>"
-    sticker = ""
+    text = f"<b>Here is your list!</b>"
+    sticker = "CAACAgIAAxkBAAEUbndikNf-8LUfI3yZBlxCpEGlHUbY5AACTgADOPBYCJzN1qooiz_HJAQ"
 
     def get_lists(self):
         r = requests.get(f"http://127.0.0.1:8000/api/subscribers?chat_id={self.chat_id}&status={self.status}")
         return r.json()
 
+    def display(self):
+        sent = []
+        if self.sticker:
+            if self.text:
+                self.bot.send_sticker(chat_id=self.chat_id, sticker=self.sticker)
+            else:
+                self.bot.send_sticker(chat_id=self.chat_id, sticker=self.sticker, reply_markup=self.get_keyboard())
+        if self.msg_to_del:
+            for msg_id in self.msg_to_del:
+                self.bot.delete_message(chat_id=self.chat_id, message_id=msg_id)
+        if self.text:
+            sent.append(
+                self.bot.send_message(self.chat_id, self.text, reply_markup=self.get_keyboard(), parse_mode='html'))
+        return sent
+
     def send_anime(self, result):
-        self.bot.send_message(self.chat_id, result['title'])
+        html_text = f'''
+        <b>title</b>:{result['title']}
+'''
+        if result['year']:
+            html_text += f"<b>year: </b>{result['year']}\n"
+        if result['score']:
+            html_text += f"<b>score: </b>{result['score']}\n"
+        if result['status']:
+            html_text += f"<b>status: </b>{result['status']}\n"
+        self.bot.send_message(self.chat_id, html_text, parse_mode='html',
+                              reply_markup=self.move_keybord(result['id_a']))
 
     def process_call_back(self, message: types.CallbackQuery) -> 'BaseState':
         if message.data:
+            if message.data[:6] == 'moveto':
+                move = MoveToMyLists(self.bot, self.chat_id, self.msg_to_del)
+                move.id = self.get_sub(message.data[6:])
+                return move
+            if message.data[:6] == 'remove':
+                self.remove_item(message.data[6:])
+                return MyLists(self.bot, self.chat_id, self.msg_to_del)
             if message.data == 'prevstate':
-                return MyLists(self.bot, self.chat_id)
+                return MyLists(self.bot, self.chat_id, self.msg_to_del)
+
+    def remove_item(self, id_a):
+        r = requests.delete(f'http://127.0.0.1:8000/api/subscribers/{self.get_sub(id_a)}/',
+                            auth=(os.getenv('USER'), os.getenv('PASSWORD')))
 
     def get_keyboard(self):
+        markup = types.InlineKeyboardMarkup(row_width=1, )
         anime_id = self.get_lists()
         for i in range(len(anime_id['results'])):
             r = requests.get(f"http://127.0.0.1:8000/api/animebase/{anime_id['results'][i]['anime_id']}")
             anime_title = r.json()
             self.send_anime(anime_title)
-        markup = types.InlineKeyboardMarkup(row_width=1, )
         back_button = types.InlineKeyboardButton('Back ↩',
                                                  callback_data='prevstate')
         markup.add(back_button)
+        return markup
+
+    def get_sub(self, id_a):
+        r = requests.get(
+            f'http://127.0.0.1:8000/api/subscribers?chat_id={self.chat_id}&status={self.status}&anime_id={id_a}')
+        item = r.json()
+        return item["results"][0]["id_u"]
+
+    def move_keybord(self, id_a):
+        markup = types.InlineKeyboardMarkup(row_width=2, )
+        remove_button = types.InlineKeyboardButton('Remove ❌',
+                                                   callback_data='remove' + str(id_a))
+        move_button = types.InlineKeyboardButton('Move to ↘',
+                                                 callback_data='moveto' + str(id_a))
+        markup.add(remove_button, move_button)
         return markup
 
 
@@ -239,12 +294,12 @@ class AddToList(BaseState):  # Додати до списку
     def process_call_back(self, message: types.CallbackQuery) -> 'BaseState':
         if message.data:
             if message.data == 'prevstate':
-                return ShowMenu(self.bot, self.chat_id)
-            done = ViewDoneAdd(self.bot, self.chat_id)
+                return ShowMenu(self.bot, self.chat_id, self.msg_to_del)
+            done = ViewDoneAdd(self.bot, self.chat_id, self.msg_to_del)
             done.anime_id = self.anime_id
             done.status = message.data
             return done
-        return AddToList(self.bot, self.chat_id)
+        return AddToList(self.bot, self.chat_id, self.msg_to_del)
 
     def get_keyboard(self):
         markup = types.InlineKeyboardMarkup(row_width=1, )
@@ -270,7 +325,7 @@ class EndState(BaseState):
     def process_call_back(self, message: types.CallbackQuery) -> 'BaseState':
         if message.data:
             if message.data == 'prevstate':
-                return ShowMenu(self.bot, self.chat_id)
+                return ShowMenu(self.bot, self.chat_id, self.msg_to_del)
 
     def get_keyboard(self):
         markup = types.InlineKeyboardMarkup(row_width=1, )
@@ -282,7 +337,6 @@ class EndState(BaseState):
 
 class AnimeDetails(BaseState):
     sticker = "CAACAgIAAxkBAAEUUcRijN2Ydj62TDWZl9PZwt4-XT-LAQACFgADOPBYCG2PHd_3dhKoJAQ"
-
 
     def send_anime(self, result):
         html_text = ""
@@ -340,7 +394,7 @@ class AnimeDetails(BaseState):
         self.send_anime(anime)
 
         markup = types.InlineKeyboardMarkup(row_width=2)
-        add_button = types.InlineKeyboardButton('Add to list ⭐', callback_data='nextstate'+str(self.anime_id))
+        add_button = types.InlineKeyboardButton('Add to list ⭐', callback_data='nextstate' + str(self.anime_id))
         back_button = types.InlineKeyboardButton('Back ↩', callback_data='prevstate')
         markup.add(add_button, back_button)
         return markup
@@ -348,12 +402,12 @@ class AnimeDetails(BaseState):
     def process_call_back(self, message: types.CallbackQuery) -> 'BaseState':
         if message.data:
             if message.data[:9] == 'nextstate':
-                add_to_list = AddToList(self.bot, self.chat_id)
+                add_to_list = AddToList(self.bot, self.chat_id, self.msg_to_del)
                 add_to_list.anime_id = str(message.data[9:])
                 return add_to_list
             if message.data == 'prevstate':
-                return ShowMenu(self.bot, self.chat_id)
-        return AnimeDetails(self.bot, self.chat_id)
+                return ShowMenu(self.bot, self.chat_id, self.msg_to_del)
+        return AnimeDetails(self.bot, self.chat_id, self.msg_to_del)
 
 
 class ViewDoneAdd(BaseState):
@@ -372,7 +426,7 @@ class ViewDoneAdd(BaseState):
     def process_call_back(self, message: types.CallbackQuery) -> 'BaseState':
         if message.data:
             if message.data == 'prevstate':
-                return ShowMenu(self.bot, self.chat_id)
+                return ShowMenu(self.bot, self.chat_id, self.msg_to_del)
 
     def get_keyboard(self):
         markup = types.InlineKeyboardMarkup(row_width=1, )
@@ -380,4 +434,43 @@ class ViewDoneAdd(BaseState):
         back_button = types.InlineKeyboardButton('Back ↩',
                                                  callback_data='prevstate')
         markup.add(back_button)
+        return markup
+
+
+class MoveToMyLists(BaseState):
+    text = f"<b>Choose where.</b>"
+    sticker = "CAACAgIAAxkBAAEUOYJiiKwaSlG-ud2mGJ14ndSpX4UFDwACNgADOPBYCLeuZtFoIia4JAQ"
+
+    def process_call_back(self, message: types.CallbackQuery) -> 'BaseState':
+        if message.data:
+            if message.data == 'prevstate':
+                return ShowMenu(self.bot, self.chat_id, self.msg_to_del)
+            self.put_data(message.data)
+            self.bot.send_message(self.chat_id,f"<b>The title was succesfully moved to {message.data} list</b>",parse_mode='html')
+            ml = Lists(self.bot, self.chat_id, self.msg_to_del)
+            ml.status = message.data
+            return ml
+
+    def put_data(self, status):
+        data = {
+            "status": status
+        }
+        r = requests.put(f'http://127.0.0.1:8000/api/subscribers/{self.id}/', data=data,
+                         auth=(os.getenv('USER'), os.getenv('PASSWORD')))
+
+    def get_keyboard(self):
+        markup = types.InlineKeyboardMarkup(row_width=1, )
+        watching = types.InlineKeyboardButton('Watching 👀',
+                                              callback_data='watching')
+        completed = types.InlineKeyboardButton('Completed ✅',
+                                               callback_data='completed')
+        on_hold = types.InlineKeyboardButton('On Hold 🕓',
+                                             callback_data='on_hold')
+        dropped = types.InlineKeyboardButton('Dropped 🗑',
+                                             callback_data='dropped')
+        ptw = types.InlineKeyboardButton('Plan to watch 📝',
+                                         callback_data='plan_to_watch')
+        back_button = types.InlineKeyboardButton('Back ↩',
+                                                 callback_data='prevstate')
+        markup.add(watching, completed, on_hold, dropped, ptw, back_button)
         return markup

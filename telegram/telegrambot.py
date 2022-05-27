@@ -1,4 +1,3 @@
-
 import os
 import telebot
 
@@ -17,7 +16,7 @@ clients: dict = {}
 def send_welcome(message: telebot.types.Message):
     bot_new = Start(bot, message.chat.id)
     bot_new.display()
-
+    clients[message.chat.id] = Start(bot,message.chat.id)
 
 
 @bot.callback_query_handler(func=lambda message: True)
@@ -39,7 +38,10 @@ def echo_all(message: telebot.types.Message):
 
 def display(chat_id):
     state = get_state(chat_id)
-    state.display()
+    prev_msg = state.display()
+    print(prev_msg)
+    state.delete_msg_text(msg_id=prev_msg)
+
 
 
 def get_state(chat_id) -> BaseState:
