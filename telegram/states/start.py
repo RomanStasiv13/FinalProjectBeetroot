@@ -252,6 +252,7 @@ class Lists(BaseState):  # Подивитися списки
                 return move
             if message.data[:6] == 'remove':
                 self.remove_item(message.data[6:])
+                self.bot.send_message(self.chat_id, "<b>The title was successfully removed.</b>", parse_mode='html')
                 return MyLists(self.bot, self.chat_id, self.msg_to_del)
             if message.data == 'prevstate':
                 return MyLists(self.bot, self.chat_id, self.msg_to_del)
@@ -438,18 +439,19 @@ class ViewDoneAdd(BaseState):
 
 
 class MoveToMyLists(BaseState):
-    text = f"<b>Choose where.</b>"
-    sticker = "CAACAgIAAxkBAAEUOYJiiKwaSlG-ud2mGJ14ndSpX4UFDwACNgADOPBYCLeuZtFoIia4JAQ"
+    text = f"<b>Choose the list I should move to.</b>"
+    sticker = "CAACAgIAAxkBAAEUcPRikTII9vknntnumjDxe9XdlDOAFgACIAADOPBYCPjmwRB3l-e8JAQ"
 
     def process_call_back(self, message: types.CallbackQuery) -> 'BaseState':
         if message.data:
             if message.data == 'prevstate':
-                return ShowMenu(self.bot, self.chat_id, self.msg_to_del)
+                return MyLists(self.bot, self.chat_id, self.msg_to_del)
             self.put_data(message.data)
             self.bot.send_message(self.chat_id,f"<b>The title was succesfully moved to {message.data} list</b>",parse_mode='html')
             ml = Lists(self.bot, self.chat_id, self.msg_to_del)
             ml.status = message.data
             return ml
+        return MoveToMyLists(self.bot, self.chat_id, self.msg_to_del)
 
     def put_data(self, status):
         data = {
