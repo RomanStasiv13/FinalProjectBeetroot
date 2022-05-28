@@ -62,4 +62,3 @@ class BaseState:
     def delete_msg_text(self, msg_id):
         msg_id_list = [msg.message_id for msg in msg_id]
         self.msg_to_del = msg_id_list
-

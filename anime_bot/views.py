@@ -2,7 +2,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 
 from anime_bot.models import Anime, Genres, Studio, Subscriber
-# Create your views here.
+
 from anime_bot.serializer import AnimeSerializer, GenresSerializer, StudiosSerializer, SubscriberSerializer
 
 

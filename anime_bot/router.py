@@ -7,4 +7,3 @@ router.register(r'animebase', AnimeViewSet)
 router.register(r'genres', GenresViewSet)
 router.register(r'studios', StudiosViewSet)
 router.register(r'subscribers', SubscriberViewSet)
-

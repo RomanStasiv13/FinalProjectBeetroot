@@ -445,7 +445,8 @@ class MoveToMyLists(BaseState):
             if message.data == 'prevstate':
                 return MyLists(self.bot, self.chat_id, self.msg_to_del)
             self.put_data(message.data)
-            self.bot.send_message(self.chat_id,f"<b>The title was succesfully moved to {message.data} list</b>",parse_mode='html')
+            self.bot.send_message(self.chat_id, f"<b>The title was succesfully moved to {message.data} list</b>",
+                                  parse_mode='html')
             ml = Lists(self.bot, self.chat_id, self.msg_to_del)
             ml.status = message.data
             return ml

@@ -2,9 +2,6 @@ from datetime import datetime
 from django.db import models
 
 
-# Create your models here.
-
-
 class Anime(models.Model):
     id_a = models.AutoField(primary_key=True)
 
@@ -48,6 +45,6 @@ class Studio(models.Model):
 
 class Subscriber(models.Model):
     id_u = models.AutoField(primary_key=True)
-    chat_id = models.CharField(max_length=150,blank=True,null=True)
-    status = models.CharField(max_length=255,blank=True,null=True)
-    anime_id = models.IntegerField(blank=True,null=True)
+    chat_id = models.CharField(max_length=150, blank=True, null=True)
+    status = models.CharField(max_length=255, blank=True, null=True)
+    anime_id = models.IntegerField(blank=True, null=True)

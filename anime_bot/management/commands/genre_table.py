@@ -1,7 +1,7 @@
-
 import requests
 from django.core.management.base import BaseCommand
 from anime_bot.models import Genres
+
 
 class Command(BaseCommand):
 
@@ -12,4 +12,3 @@ class Command(BaseCommand):
         for field in uniq_genres:
             genre, _ = Genres.objects.update_or_create(id_g=field['mal_id'],
                                                        title=field['name'])
-
