@@ -60,8 +60,6 @@ class Search(BaseState):
     def process_call_back(self, message: types.CallbackQuery) -> 'BaseState':
         if message.data:
             if message.data == 'prevstate':
-                print(message.from_user.id)
-                # self.bot.delete_state(user_id=message.from_user.id, chat_id=self.chat_id)
                 return ShowMenu(self.bot, self.chat_id, self.msg_to_del)
             ml = SearchBy(self.bot, self.chat_id, self.msg_to_del)
             ml.status = message.data

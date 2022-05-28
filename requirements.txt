@@ -1,5 +1,5 @@
-requests
-djangorestframework
-pyTelegramBotAPI
-python-dotenv
-django-filter
+requests==2.27.1
+djangorestframework==3.13.1
+pyTelegramBotAPI==4.5.1
+python-dotenv==0.20.0
+django-filter==21.1

@@ -39,7 +39,6 @@ def echo_all(message: telebot.types.Message):
 def display(chat_id):
     state = get_state(chat_id)
     prev_msg = state.display()
-    print(prev_msg)
     state.delete_msg_text(msg_id=prev_msg)
 
 
